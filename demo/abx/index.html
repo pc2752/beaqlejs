@@ -32,7 +32,6 @@
 
             // Uncomment one of the following lines to choose the desired test class
 
-            //testHandle = new MushraTest(TestConfig);    // <-- MUSHRA test class
             testHandle = new AbxTest(TestConfig);     // <-- ABX test class
 
             $('#Footer').prepend(testHandle.browserFeatureString() + '<br/>');
@@ -155,7 +154,8 @@
         </div>
         
         <div>
-            <input id="ChkLoopAudio" type="checkbox" value="Loop" /><label for="BtnLoopAudio">Loop</label>				
+            <input id="ChkLoopAudio" type="checkbox" value="Loop" /><label for="ChkLoopAudio">Loop</label>
+            <input id="ChkAutoReturn" type="checkbox" value="Auto Return" /><label for="ChkAutoReturn">Auto Return</label>
         </div>
         
         <div id="Volume">
@@ -169,7 +169,7 @@
 
     <!-- Footer -->
     <div id="Footer">
-        This listening test has been created with <a href="https://github.com/HSU-ANT/beaqlejs" target="_blank">BeaqleJS</a>
+        This listening test has been created with <a href="https://github.com/HSU-ANT/beaqlejs" target="_blank">BeaqleJS</a> from unreleased <a href="https://github.com/HSU-ANT/beaqlejs/tree/master" target="_blank">master branch</a>.
     </div>
 </div>
 

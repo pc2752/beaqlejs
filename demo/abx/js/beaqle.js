@@ -28,10 +28,14 @@
         this.NumUsed = 0;
         this.LoopAudio = 0;
         this.LoopFade = false;
+        this.AutoReturn = true;
         this.ABPos = [0, 100];
         this.PoolID = PoolID;
         this.IDPlaying = -1;
-        this.fadeOutTime = 0.03;
+        this.fadeInTime  = 0.03;
+        this.fadeOutTime = 0.01;
+        this.fadeDelay   = 0.01;
+        this.lastAudioPosition = 0;
         this.positionUpdateInterval = 0.005;
 
         // web audio is only supported for same origin
@@ -52,10 +56,15 @@
              this.waContext = false;
              break;
         }
-        
-	    // only enable webAudio on Chrome, Safri and Opera.
-        if (!(clientIsChrome() || clientIsSafari() || clientIsOpera()))
+
+        // IE does not support the WebAudioAPI
+        if (clientIsIE() || clientIsSafari())
             this.waContext = false;
+
+        // Firefox needs a longer delay before we start a fading curve,
+        // otherwise the fading is not recognized
+        if (clientIsFirefox())
+            this.fadeDelay = 0.05;
 
         // set to false to manually disable WebAudioAPI support
         //this.waContext = false;
@@ -80,8 +89,8 @@
             
             // calculate progress including a look ahead for fade out or loop
             var progress = 0;
-            progress = (audiotag.currentTime+_this.positionUpdateInterval+_this.fadeOutTime) / audiotag.duration * 100.0;
-            
+            progress = (audiotag.currentTime+_this.positionUpdateInterval+_this.fadeOutTime*2) / audiotag.duration * 100.0;
+
             // if end is reached ...
             if ((progress >= _this.ABPos[1]) && (!_this.LoopFade)) {
                 if (_this.LoopAudio == true) {
@@ -134,11 +143,11 @@
 
         if (this.waContext!==false) {
             var gainNode = this.waContext.createGain();
-            gainNode.value = 0.00000001;
             var source = this.waContext.createMediaElementSource(audiotag);
             source.connect(gainNode);
             gainNode.connect(this.waContext.destination);
-            gainNode.gain.setValueAtTime(0.0000001, 0);
+            gainNode.gain.value = 0.0000001;  // fixes https://bugzilla.mozilla.org/show_bug.cgi?id=1213313
+            gainNode.gain.setValueAtTime(0.0000001, this.waContext.currentTime);
             this.gainNodes[ID] = gainNode;
         }
         
@@ -163,14 +172,22 @@
     
     // play audio with specified ID
     AudioPool.prototype.play = function(ID){
-        var audiotag = $('#'+this.PoolID+' > #audio'+ID).get(0);        
-        audiotag.currentTime = 0.000001 + this.ABPos[0] / 100.0 * audiotag.duration;
+        var audiotag = $('#'+this.PoolID+' > #audio'+ID).get(0);
+        
+        if ((this.AutoReturn===false) &&
+            (this.lastAudioPosition + this.fadeDelay <= (this.ABPos[1] / 100 * audiotag.duration)) &&
+            (this.lastAudioPosition >= (this.ABPos[0] / 100 * audiotag.duration)))
+                audiotag.currentTime = this.lastAudioPosition;
+        else
+            audiotag.currentTime = 0.000001 + this.ABPos[0] / 100.0 * audiotag.duration;
 
         if (this.waContext!==false) {
             var loopLen = (this.ABPos[1] - this.ABPos[0]) / 100.0 * audiotag.duration;
             if (loopLen > this.fadeOutTime*2 + this.positionUpdateInterval*2) {
                 this.gainNodes[ID].gain.cancelScheduledValues(this.waContext.currentTime);
-                this.gainNodes[ID].gain.setTargetAtTime(1, this.waContext.currentTime, this.fadeOutTime/1.0 );
+                this.gainNodes[ID].gain.value = 0.0000001;  // fixes https://bugzilla.mozilla.org/show_bug.cgi?id=1213313
+                this.gainNodes[ID].gain.setValueAtTime(0.0000001, this.waContext.currentTime);                
+                this.gainNodes[ID].gain.setTargetAtTime(1.0, this.waContext.currentTime + this.fadeDelay, this.fadeInTime);
                 this.LoopFade = false;
                 audiotag.play();
             }
@@ -187,7 +204,7 @@
         if (this.waContext!==false) {
             // fade out
             this.gainNodes[this.IDPlaying].gain.cancelScheduledValues(this.waContext.currentTime);
-            this.gainNodes[this.IDPlaying].gain.setTargetAtTime(0, this.waContext.currentTime, this.fadeOutTime/8.0 );
+            this.gainNodes[this.IDPlaying].gain.setTargetAtTime(0.0, this.waContext.currentTime + this.fadeDelay, this.fadeOutTime);
             this.LoopFade = true;
 
             var audiotag = $('#'+this.PoolID+' > #audio'+this.IDPlaying).get(0);
@@ -197,11 +214,11 @@
             setTimeout( function(){
                     _this.LoopFade = false;
                     audiotag.currentTime = 0.000001 + _this.ABPos[0] / 100.0 * audiotag.duration;
-                    _this.gainNodes[_this.IDPlaying].gain.cancelScheduledValues(_this.waContext.currentTime);       
-                    _this.gainNodes[_this.IDPlaying].gain.setTargetAtTime(1, _this.waContext.currentTime, _this.fadeOutTime/1.0 );
-                }, 
-                this.fadeOutTime*1000 + 2
-            );            
+                    _this.gainNodes[_this.IDPlaying].gain.cancelScheduledValues(_this.waContext.currentTime);
+                    _this.gainNodes[_this.IDPlaying].gain.setTargetAtTime(1.0, _this.waContext.currentTime + _this.fadeDelay, _this.fadeInTime);
+                },
+                (_this.fadeOutTime*2.0 + _this.fadeDelay)*1000.0 + 5.0
+            );
         } else {
             // return to the start marker
             var audiotag = $('#'+this.PoolID+' > #audio'+this.IDPlaying).get(0);
@@ -216,13 +233,14 @@
         if (this.IDPlaying!==-1) {
  
             var audiotag = $('#'+this.PoolID+' > #audio'+this.IDPlaying).get(0);
+            this.lastAudioPosition = audiotag.currentTime;
             if ((this.waContext!==false) && (!audiotag.paused)) {
                 this.gainNodes[this.IDPlaying].gain.cancelScheduledValues(this.waContext.currentTime);
-                this.gainNodes[this.IDPlaying].gain.setTargetAtTime(0, this.waContext.currentTime, this.fadeOutTime/8.0 );
-        
+                this.gainNodes[this.IDPlaying].gain.setTargetAtTime(0.0, this.waContext.currentTime + this.fadeDelay, this.fadeOutTime );
+
                 var _this  = this;
                 var prevID = this.IDPlaying;
-                setTimeout( function(){if (_this.IDPlaying!==prevID) audiotag.pause();}, _this.fadeOutTime*1000 + 5);
+                setTimeout( function(){if (_this.IDPlaying!==prevID) audiotag.pause();}, (_this.fadeOutTime*2.0 + _this.fadeDelay)*1000.0 + 5.0);
             } else {
                 audiotag.pause();
             }
@@ -250,6 +268,16 @@
         this.LoopAudio = !this.LoopAudio;
     }
 
+    // set auto return mode
+    AudioPool.prototype.setAutoReturn = function(autoReturn) {
+            this.AutoReturn = autoReturn;
+    }
+
+    // toggle auto return mode
+    AudioPool.prototype.toggleAutoReturn = function() {
+        this.AutoReturn = !this.AutoReturn;
+    }
+
 
 // ###################################################################
 // some helper functions
@@ -266,6 +294,11 @@ function clientIsIE() {
         return ieversion;
     }
     return 0;
+}
+
+// check for Firefox
+function clientIsFirefox() {
+    return typeof InstallTrigger !== 'undefined';
 }
 
 // check for Google Chrome/Chromium
@@ -377,7 +410,9 @@ $.extend({ alert: function (message, title) {
            return;
         }
         
+        // Load and verify config
         this.TestConfig = TestData;
+        this.setDefaults(this.TestConfig);
 
         // some state variables
         this.TestState = {
@@ -398,6 +433,7 @@ $.extend({ alert: function (message, title) {
         this.audioPool.onError = $.proxy(this.audioErrorCallback, this);
         this.audioPool.onDataLoaded = $.proxy(this.audioLoadedCallback, this);
         this.audioPool.setLooped(this.TestConfig.LoopByDefault);
+        this.audioPool.setAutoReturn(this.TestConfig.AutoReturnByDefault);
 
         this.checkBrowserFeatures();
 
@@ -433,13 +469,19 @@ $.extend({ alert: function (message, title) {
         }
         $('#PauseButton').button();
 
-        //$('#ChkLoopAudio').button();
         if (this.TestConfig.LoopByDefault) {
             $('#ChkLoopAudio').prop("checked", true);
         } else {
             $('#ChkLoopAudio').prop("checked", false);
         }
         $('#ChkLoopAudio').on('change', $.proxy(handlerObject.toggleLooping, handlerObject));
+        
+        if (this.TestConfig.AutoReturnByDefault) {
+            $('#ChkAutoReturn').prop("checked", true);
+        } else {
+            $('#ChkAutoReturn').prop("checked", false);
+        }
+        $('#ChkAutoReturn').on('change', $.proxy(handlerObject.toggleAutoReturn, handlerObject));
 
         $('#ProgressBar').progressbar();
         $('#BtnNextTest').button();
@@ -462,6 +504,27 @@ $.extend({ alert: function (message, title) {
         }
 
 
+    }
+
+    // ###################################################################
+    ListeningTest.prototype.setDefaults = function(config) {
+        var defaults = {
+          "ShowFileIDs": false,
+          "ShowResults": false,
+          "LoopByDefault": true,
+          "AutoReturnByDefault": true,
+          "EnableABLoop": true,
+          "EnableOnlineSubmission": false,
+          "BeaqleServiceURL": "",
+          "SupervisorContact": "",
+          "RandomizeTestOrder": false,
+          "MaxTestsPerRun": -1
+        }
+      
+        for (var property in defaults) {
+            if (config[property] === undefined)
+                config[property] = defaults[property];
+        }
     }
 
     // ###################################################################
@@ -709,9 +772,15 @@ $.extend({ alert: function (message, title) {
 
 
     // ###################################################################
-    // enable looping for all audios
+    // enable/disable looping for all audios
     ListeningTest.prototype.toggleLooping = function () {    
         this.audioPool.toggleLooped();
+    }
+    
+    // ###################################################################
+    // enable/disable auto return for all audios
+    ListeningTest.prototype.toggleAutoReturn = function () {    
+        this.audioPool.toggleAutoReturn();
     }
 
     // ###################################################################
@@ -827,6 +896,7 @@ $.extend({ alert: function (message, title) {
         features.audioFormats = new Array();
         var a = document.createElement('audio');
         features.audioFormats['WAV'] = !!(a.canPlayType && a.canPlayType('audio/wav; codecs="1"').replace(/no/, ''));
+        features.audioFormats['FLAC'] = !!(a.canPlayType && a.canPlayType('audio/flac').replace(/no/, ''));
         features.audioFormats['OGG'] = !!(a.canPlayType && a.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, ''));
         features.audioFormats['MP3'] = !!(a.canPlayType && a.canPlayType('audio/mpeg;').replace(/no/, ''));
         features.audioFormats['AAC'] = !!(a.canPlayType && a.canPlayType('audio/mp4; codecs="mp4a.40.2"').replace(/no/, ''));
@@ -852,6 +922,11 @@ $.extend({ alert: function (message, title) {
             featStr += " <span class='feature-available'>WAV</span>, ";
         else
             featStr += " <span class='feature-not-available'>WAV</span>, ";
+
+        if (this.browserFeatures.audioFormats['FLAC'])
+            featStr += " <span class='feature-available'>FLAC</span>, ";
+        else
+            featStr += " <span class='feature-not-available'>FLAC</span>, ";
 
         if (this.browserFeatures.audioFormats['OGG'])
             featStr += " <span class='feature-available'>Vorbis</span>, ";
