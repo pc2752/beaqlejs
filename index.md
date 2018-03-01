@@ -27,7 +27,7 @@ If you want to cite BeaqleJS in a publication please use
 > S. Kraft, U. Zölzer: "BeaqleJS: HTML5 and JavaScript based Framework for the Subjective Evaluation of Audio Quality", _Linux Audio Conference_, 2014, Karlsruhe, Germany
 
 as a reference or link to our GitHub repository
-    
+
 > https://github.com/HSU-ANT/beaqlejs
 
 
@@ -65,37 +65,94 @@ as a reference or link to our GitHub repository
     Two example config files for the MUSHRA and ABX test class are already supplied in the `config/` folder to serve as a starting point. Detailed information about the different test classes and configuration can be found below.
 
 
+## Docker Webserver ##
+
+Docker allows you to easily setup a webserver with PHP in order to run and test
+BeaqleJS locally on your computer.  More information about Docker can be
+found at `https://www.docker.com/`.
+
+### Manual Setup ###
+
+Create a container for the first time and mount your configured BeaqleJS folder
+into the container.
+
+    $> docker run -d -p 80:80 -v /path/to/BeaqleJS:/var/www/html --name beaqlejs-server php:7.0-apache
+
+You can then access BeaqleJS at `http://localhost/`.
+
+Please note that this runs a public webserver on your machine which is
+accessible by everyone in your local network. Therefore, it is advised to
+stop the Docker container when it is not needed anymore.
+
+You can stop the Docker container by
+
+    $> docker stop beaqlejs-server
+
+and restart it again with
+
+    $> docker start beaqlejs-server
+
+The current state of all available Docker containers can be investigated by
+
+    $> docker ps -a
+
+### Docker Compose ###
+
+[Docker Compose](https://docs.docker.com/compose/install/) is a tool to run a server application from a simple configuration file. 
+
+Go to the directory with the `docker-compose.yml` file in the BeaqleJS file tree:
+
+    $> cd tools/Docker/
+    
+Create a container for the first time and initialize it:
+
+    $> docker-compose up
+
+Start and stop an existing service:
+
+    $> docker-compose start
+    $> docker-compose stop
+
+Completely remove the service:
+
+    $> docker-compose down
+
+The status of the service can be inspected with:
+    
+    $> docker-compose ps 
+
 # Test Configuration #
 
 ## General Options ##
 
-The available options can be dividided into a set of general options whitch apply to all test classes and other options, including file declarations, that are specific for a single test class.
+The available options can be divided into a set of general options which apply to all test classes and other options, including file declarations, that are specific for a single test class.
 
 ```javascript
 var TestConfig = {
   "TestName": "My Listening Test",   // <=  Name of the test
   "LoopByDefault": true,             // <=  Enable looped playback by default
-  "ShowFileIDs": false,              // <=  Show file IDs for debugging (never 
+  "AutoReturnByDefault": true,       // <=  Always start playback from loop/track begin
+  "ShowFileIDs": false,              // <=  Show file IDs for debugging (never
                                      //     enable this during real test!)
   "ShowResults": false,              // <=  Show table with test results at the end
-  "EnableABLoop": true,              // <=  Show controls to loop playback with an 
+  "EnableABLoop": true,              // <=  Show controls to loop playback with an
                                      //     AB range slider
-  "EnableOnlineSubmission": false,   // <=  Enable transmission of JSON encoded 
+  "EnableOnlineSubmission": false,   // <=  Enable transmission of JSON encoded
                                      //     results to a web service
   "BeaqleServiceURL": "",            // <=  URL of the web service
-  "SupervisorContact": "",           // <=  Email address of supervisor to contact for 
+  "SupervisorContact": "",           // <=  Email address of supervisor to contact for
                                      //     help or for submission of results by email
   "RandomizeTestOrder": true,        // <=  Present test sets in a random order
-  "MaxTestsPerRun": -1,              // <=  Only run a random subset of all available 
+  "MaxTestsPerRun": -1,              // <=  Only run a random subset of all available
                                      //     tests, set to -1 to disable
-  "Testsets": [ {...}, {...}, ... ], // <=  Definition of test sets and files, more 
+  "Testsets": [ {...}, {...}, ... ], // <=  Definition of test sets and files, more
                                      //     details below
 }
 ```
 
 ## ABX ##
 
-In an ABX test three items named A, B and X are presented to the listener, whereas X is randomly selected to be either the same as A or B. The listener has to identify which item is hidden behind X, or which one (A or B) is closest to X. If the listener is able to find the correct item, it reveals that there are perceptual differences between A and B. 
+In an ABX test three items named A, B and X are presented to the listener, whereas X is randomly selected to be either the same as A or B. The listener has to identify which item is hidden behind X, or which one (A or B) is closest to X. If the listener is able to find the correct item, it reveals that there are perceptual differences between A and B.
 
 A typical application of ABX tests would be the evaluation of the transparency of audio codecs. For example item A could be an unencoded audio snippet and B is the same snippet but encoded with a lossy codec. When the listener is not able to identify if A or B was hidden in X (results are randomly distributed), one can assume that the audio coding was transparent
 
@@ -125,14 +182,16 @@ Contrary to ABX tests the MUSHRA procedure allows more detailed evaluations as i
 "RateMinValue": 0,                    // <=  Minimum rating
 "RateMaxValue": 100,                  // <=  Maximum rating
 "RateDefaultValue":0,                 // <=  Default rating
+"RequireMaxRating": false,            // <=  At least one of the ratings in a testset
+                                      //     has to be at the maximum value
 "Testsets": [
   { "Name": "Schubert 1",             // <=  Name of the test set
-    "TestID": "id1_1",                // <=  Unique test set ID, necessary for 
+    "TestID": "id1_1",                // <=  Unique test set ID, necessary for
                                       //     internal referencing
     "Files": {                        // <=  Array with test files
-      "Reference": "audio/ref.wav",   // <=  Every MUSHRA test set needs exactly 
+      "Reference": "audio/ref.wav",   // <=  Every MUSHRA test set needs exactly
                                       //     one(!) file with a "Reference" label
-      "label_1": "audio/algo_1.wav",  // <=  Various files to be tested, the labels 
+      "label_1": "audio/algo_1.wav",  // <=  Various files to be tested, the labels
       "label_2": "audio/algo_2.wav",  //     can be freely chosen as desired but
       "label_3": "audio/algo_3.wav",  //     have to be unique inside a test set
       "anchor": "audio/algo_anc.wav", //      ...
@@ -150,31 +209,41 @@ BeaqleJS in general will run well in any recent web browser out in the wild. The
 
 ## Required HTML5 Features ##
 
-* Audio playback using HTML5 is widely supported by all major browsers since many years (except IE below version 9.0). ([list browsers](http://caniuse.com/#feat=audio))
+* Audio playback using HTML5 is widely supported by all major browsers since many years ([list browsers](http://caniuse.com/#feat=audio)).
 
-* FileAPI-Blob is necessary to provide the listening test results as a virtual download to be saved on the local harddisk. This API can be expected to be available in every browser of the last years  (except IE below version 9.0). ([list browsers](http://caniuse.com/#feat=blobbuilder))
+* FileAPI-Blob is necessary to provide the listening test results as a virtual download to be saved on the local harddisk. This API can be expected to be available in every browser released in the last years ([list browsers](http://caniuse.com/#feat=blobbuilder)).
 
 Optionally:
 
-* WebAudioAPI is used in BeaqleJS for smooth fade in/out at start/stop of playback and at the loop borders. It currently only works reliably with browsers based on the Chromium engine, although it is available in every major browser apart from the Internet Explorer. ([list browsers](http://caniuse.com/#feat=audio-api))
+* WebAudioAPI is used in BeaqleJS for smooth fade in/out at start/stop of playback and at the loop borders. It is available in every major browser apart from the Internet Explorer ([list browsers](http://caniuse.com/#feat=audio-api)). Due to different bugs and inconsistencies in the WebAudioAPI, smooth fade in/out is not guaranteed to work equally well on all browsers. Best results were obtained with browsers based on the Chromium engine.
 
 ## Codecs ##
 
-Although most browsers today support the HTML5 `<audio>` tag, the supported formats and codecs vary a lot. Unfortunately no browser directly supports FLAC or other lossless compression so far. The only lossless, but also uncompressed, format widely accepted is WAV PCM with 16 bit sample precision. Solely the Internet Explorer is not capable to play back this file type.
+Although most browsers today support the HTML5 `<audio>` tag, the supported formats and codecs vary a lot. Unfortunately, support for lossless compression like FLAC has not yet reached a sufficient spread. The only lossless, but also uncompressed, format widely accepted is WAV PCM with 16 bit sample precision. Solely the Internet Explorer is not capable to play back this file type.
 
-Format     |  IE   | Firefox | Chrome |  Opera | Safari
------------|-------|---------|--------|--------|--------
-WAV PCM    |  no   |  > 3.5  |  yes   | > 11.0 | > 3.1
-Ogg Vorbis |  no   |  > 3.5  |  yes   | > 10.5 | XiphQT
-MP3        | > 9.0 |  > 26*  |  yes   | > 14   | > 3.1
-ACC        | > 9.0 |  > 26*  |  yes   | > 14   | > 3.1
+The following table lists the minimum browser version required for different audio formats:
 
-(* not on Mac OS X)
+Format     |  IE   |  Edge  | Firefox | Chrome |  Opera | Safari
+-----------|-------|--------|---------|--------|--------|--------
+WAV PCM    |  no   |   12   |   3.5   |   8    |  11.5  |   3.2
+FLAC       |  no   |   no   |   51    |   56   |   42   |   no
+Ogg Vorbis |  no   |   no   |   3.5   |   4    |  11.5  | XiphQT
+MP3        |  9.0  |   12   |   22    |   4    |   15   |   4
+ACC        |  9.0  |   12   |   22*   |   12   |   15   |   4
+
+(* not on all platforms, requires a pre-installed codec)
+
+Source `canisue.com`:
+   * [WAV PCM](http://caniuse.com/#feat=wav)
+   * [FLAC](http://caniuse.com/#feat=flac)
+   * [Ogg Vorbis](http://caniuse.com/#feat=ogg-vorbis)
+   * [MP3](http://caniuse.com/#feat=mp3)
+   * [AAC](http://caniuse.com/#feat=aac)
 
 
 # Online Submission #
 
-BeaqleJS can send the test results in JSON format to a web service to collect them in a central place. An examplary server side PHP script which can be used to receive and store the results is included in the `web_service/` subfolder. It only requires a webspace with PHP version 5.
+BeaqleJS can send the test results in JSON format to a web service to collect them in a central place. An exemplary server side PHP script which can be used to receive and store the results is included in the `web_service/` subfolder. It only requires a webspace with PHP >= 5.6.
 
 ## Setup ##
 
@@ -208,7 +277,7 @@ If the test is performed distributed over the internet or on several local compu
 
 ## Creating a new test class ##
 
-A new test class has to inherit the base functionality from the main `ListeningTest` class. Inheritance in JavaScript is achieved by prototypes and this means to define a new class `MyTest` and then set its prototype to the base class. As this overwrites the constructor it has to be reset to the child constructor afterwards: 
+A new test class has to inherit the base functionality from the main `ListeningTest` class. Inheritance in JavaScript is achieved by prototypes and this means to define a new class `MyTest` and then set its prototype to the base class. As this overwrites the constructor it has to be reset to the child constructor afterwards:
 
 ```javascript
 // inherit from ListeningTest
@@ -230,7 +299,7 @@ The child class can access the `TestState` and the `TestConfig` structures from 
 ```javascript
 ListeningTest.TestState = {
     // main public members
-    'CurrentTest': -1,	
+    'CurrentTest': -1,
     'TestIsRunning': false,
     'FileMappings': {},
     'Ratings': {},
@@ -289,6 +358,5 @@ skraft (AT) hsu-hh.de
 
 # License #
 
-The complete sources, html and script files as well as images are released unter the *GPLv3 
+The complete sources, html and script files as well as images are released under the *GPLv3
 license*. A copy of the GPL is provided in the `LICENSE.txt` file.
-
