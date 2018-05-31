@@ -16,11 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-// some linter configs
-/*jshint browser: true */
-/*jshint devel: true */
-/*globals $:false */
-
 // Enable JavaScript strict mode
 "use strict";
 
@@ -51,7 +46,7 @@
              try {
                var genContextClass = (window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.oAudioContext || window.msAudioContext);
                this.waContext = new genContextClass();
-               this.gainNodes = [];
+               this.gainNodes = new Array();
              } catch(e) {
                // API not supported
                this.waContext = false;
@@ -61,7 +56,6 @@
              this.waContext = false;
              break;
         }
-
         // IE does not support the WebAudioAPI
         if (clientIsIE() || clientIsSafari())
             this.waContext = false;
@@ -78,12 +72,12 @@
         var _this = this;
         setInterval(this.loopCallback, this.positionUpdateInterval*1000, _this);
 
-    };
+    }
 
     // insert audio pool into DOM
     AudioPool.prototype.register = function() {
         $('<div id="'+this.PoolID+'"></div>').appendTo('body');
-    };
+    }
 
     // callback for timeUpdate event
     AudioPool.prototype.loopCallback = function(_this) {
@@ -105,26 +99,26 @@
                 }
             }
         }
-    };
+    }
 
     // ---------------------------------------------------------
     // overwrite these callbacks events after instantiation
 
     // callback for time update event
-    AudioPool.prototype.onTimeUpdate = function(e) {};
+    AudioPool.prototype.onTimeUpdate = function(e) {}    
     
     // callback for error event
-    AudioPool.prototype.onError = function(e) {};
+    AudioPool.prototype.onError = function(e) {}
     
     // callback for error event
-    AudioPool.prototype.onDataLoaded = function(e) {};
+    AudioPool.prototype.onDataLoaded = function(e) {}
     // ---------------------------------------------------------
 
 
     // clear all files
     AudioPool.prototype.clear = function(){
         if (this.waContext!==false) {
-            this.gainNodes = [];
+            this.gainNodes = new Array();
             // maybe we also have to remove the connections?!
         }
 
@@ -135,7 +129,7 @@
         }
 
         $('#'+this.PoolID+' >.audiotags').remove();
-    };
+    }
     
     // add new file to pool
     AudioPool.prototype.addAudio = function(path, ID){
@@ -144,7 +138,7 @@
 
         audiotag.setAttribute('src', path);
         audiotag.setAttribute('class', 'audiotags');
-        audiotag.setAttribute('id', "audio"+ID);
+        audiotag.setAttribute('id', "audio"+ID)
 
         if (this.waContext!==false) {
             var gainNode = this.waContext.createGain();
@@ -173,7 +167,7 @@
             audiotag.setAttribute('preload', 'none');
             audiotag.load();
         }
-    };
+    }
     
     // play audio with specified ID
     AudioPool.prototype.play = function(ID){
@@ -201,7 +195,7 @@
         }
         
         this.IDPlaying = ID;
-    };
+    }
 
     // return to loop begin
     AudioPool.prototype.loopReturn = function() { 
@@ -221,7 +215,6 @@
                     audiotag.currentTime = 0.000001 + _this.ABPos[0] / 100.0 * audiotag.duration;
                     _this.gainNodes[_this.IDPlaying].gain.cancelScheduledValues(_this.waContext.currentTime);
                     _this.gainNodes[_this.IDPlaying].gain.setTargetAtTime(1.0, _this.waContext.currentTime + _this.fadeDelay, _this.fadeInTime);
-                    audiotag.play();
                 },
                 (_this.fadeOutTime*2.0 + _this.fadeDelay)*1000.0 + 5.0
             );
@@ -231,7 +224,7 @@
             audiotag.currentTime = 0.000001 + this.ABPos[0] / 100.0 * audiotag.duration;
             audiotag.play();
         }
-    };
+    }
     
     // pause currently playing audio
     AudioPool.prototype.pause = function() {   
@@ -252,35 +245,37 @@
             }
             this.IDPlaying = -1;
         }
-    };
+    }
 
     // set volume of <audio> tags
-    AudioPool.prototype.setVolume = function(vol) {    
+    AudioPool.prototype.setVolume = function(vol) {
+        var vol = $('#VolumeSlider').slider('option', 'value') / 100;
+        
         var audioTags = $('#'+this.PoolID+' > audio');    
         for (var i = 0; i<audioTags.length; i++) { 
             audioTags[i].volume = vol;
         }
-    };
+    }
     
     // set loop mode
     AudioPool.prototype.setLooped = function(loop) {
             this.LoopAudio = loop;
-    };
+    }
     
     // toggle loop mode
     AudioPool.prototype.toggleLooped = function() {
         this.LoopAudio = !this.LoopAudio;
-    };
+    }
 
     // set auto return mode
     AudioPool.prototype.setAutoReturn = function(autoReturn) {
             this.AutoReturn = autoReturn;
-    };
+    }
 
     // toggle auto return mode
     AudioPool.prototype.toggleAutoReturn = function() {
         this.AutoReturn = !this.AutoReturn;
-    };
+    }
 
 
 // ###################################################################
@@ -294,7 +289,7 @@ function log10(val) {
 // check for Internet Explorer version
 function clientIsIE() {
     if (/MSIE (\d+\.\d+);/.test(navigator.userAgent)){ //test for MSIE x.x;
-        var ieversion = new Number(RegExp.$1); // capture x.x portion and store as a number
+        var ieversion=new Number(RegExp.$1) // capture x.x portion and store as a number
         return ieversion;
     }
     return 0;
@@ -427,7 +422,7 @@ $.extend({ alert: function (message, title) {
             "EvalResults": [],      // json array to store the evaluated test results
             "AudiosInLoadQueue": -1,
             "AudioLoadError": false
-        };
+        }
 
 
         // create and configure audio pool
@@ -452,7 +447,7 @@ $.extend({ alert: function (message, title) {
             max:100,
             value:100,
             slide: function( event, ui ) {
-                var vol = $('#VolumeSlider').slider('option', 'value') / 100;
+                var vol = log10($('#VolumeSlider').slider('option', 'value')) / 2;
                 handlerObject.audioPool.setVolume(vol);
             }
         });
@@ -498,17 +493,17 @@ $.extend({ alert: function (message, title) {
                 
 
         // install handler to warn user when test is running and he tries to leave the page
-        var testHandle = this.TestState;
+        var testHandle = this.TestState
         window.onbeforeunload = function (e) {
             if (testHandle.TestIsRunning==true) {
                 return 'The listening test is not yet finished!';
             } else {
                 return;
             }
-        };
+        }
 
 
-    };
+    }
 
     // ###################################################################
     ListeningTest.prototype.setDefaults = function(config) {
@@ -522,14 +517,15 @@ $.extend({ alert: function (message, title) {
           "BeaqleServiceURL": "",
           "SupervisorContact": "",
           "RandomizeTestOrder": false,
-          "MaxTestsPerRun": -1
-      };
+          "MaxTestsPerRun": -1,
+          "AudioRoot": ""
+        }
       
         for (var property in defaults) {
             if (config[property] === undefined)
                 config[property] = defaults[property];
         }
-    };
+    }
 
     // ###################################################################
     ListeningTest.prototype.nextTest = function() {
@@ -585,7 +581,7 @@ $.extend({ alert: function (message, title) {
             }
             return;
         }
-    };
+    }
 
     // ###################################################################
     ListeningTest.prototype.prevTest = function() {
@@ -604,7 +600,7 @@ $.extend({ alert: function (message, title) {
             this.TestState.CurrentTest = this.TestState.CurrentTest-1;
         	this.runTest(this.TestState.TestSequence[this.TestState.CurrentTest]);
         }
-    };
+    }
 
     // ###################################################################
     ListeningTest.prototype.startTests = function() {
@@ -631,7 +627,7 @@ $.extend({ alert: function (message, title) {
         // run first test
         this.TestState.CurrentTest = 0;
     	this.runTest(this.TestState.TestSequence[this.TestState.CurrentTest]);
-    };
+    }
 
     // ###################################################################    
     // prepares display to run test with number TestIdx
@@ -670,14 +666,15 @@ $.extend({ alert: function (message, title) {
         $('.playButton').each( function() {
             $(this).button();
             var audioID = $(this).attr('rel');
-            $(this).on('click', $.proxy(function(event) { handlerObject.playAudio(audioID); }, handlerObject));
+            $(this).on('click', $.proxy(function(event) {handlerObject.playAudio(audioID)}, handlerObject));
         });
             
         // load and apply already existing ratings
         if (typeof this.TestState.Ratings[TestIdx] !== 'undefined') this.readRatings(TestIdx);
 
         this.TestState.startTime = new Date().getTime();
-    };
+            
+    }
 
     // ###################################################################
     // pause all audios
@@ -685,35 +682,35 @@ $.extend({ alert: function (message, title) {
         this.audioPool.pause();
         $(".playButton").removeClass('playButton-active');
         $('.rateSlider').parent().css('background-color', 'transparent');    
-    };
+    }
 
     // ###################################################################
     // read ratings from TestState object
     ListeningTest.prototype.readRatings = function (TestIdx) {
         // overwrite and implement in inherited class
         alert('Function readRatings() has not been implemented in your inherited class!');
-    };
+    }
 
     // ###################################################################
     // save ratings to TestState object
     ListeningTest.prototype.saveRatings = function (TestIdx) {
         // overwrite and implement in inherited class
         alert('Function saveRatings() has not been implemented in your inherited class!');
-    };
+    }
 
     // ###################################################################
     // evaluate test and format/print the results
     ListeningTest.prototype.formatResults = function () {
         // overwrite and implement in inherited class
         alert('Function formatResults() has not been implemented in your inherited class!');
-    };
+    }
 
     // ###################################################################
     // create DOM for test display
     ListeningTest.prototype.createTestDOM = function (TestIdx) {
         // overwrite and implement in inherited class
         alert('Function createTestDOM() has not been implemented in your inherited class!');
-    };
+    }
 
     // ###################################################################
     // is called whenever an <audio> tag fires the onDataLoaded event
@@ -727,7 +724,7 @@ $.extend({ alert: function (message, title) {
             $('#PlayerControls').show();       
             $('#LoadOverlay').hide();
         }
-    };
+    }
 
     // ###################################################################
     // audio loading error callback
@@ -754,7 +751,7 @@ $.extend({ alert: function (message, title) {
         errorTxt +=  e.target.src + "</p>";
 
         $('#LoadOverlay').append(errorTxt);
-    };
+    }
 
     // ###################################################################
     // audio time update callback
@@ -771,20 +768,20 @@ $.extend({ alert: function (message, title) {
         var progress = e.target.currentTime / e.target.duration * 100;
         
         $('#ProgressBar').progressbar( "option", "value", progress);
-    };
+    }
 
 
     // ###################################################################
     // enable/disable looping for all audios
     ListeningTest.prototype.toggleLooping = function () {    
         this.audioPool.toggleLooped();
-    };
+    }
     
     // ###################################################################
     // enable/disable auto return for all audios
     ListeningTest.prototype.toggleAutoReturn = function () {    
         this.audioPool.toggleAutoReturn();
-    };
+    }
 
     // ###################################################################
     //play audio with specified html ID
@@ -801,26 +798,28 @@ $.extend({ alert: function (message, title) {
         $(".playButton[rel="+id+"]").addClass('playButton-active');
         
         this.audioPool.play(id);
-    };
+    }
 
     // ###################################################################
     // add and load audio file with specified ID
     ListeningTest.prototype.addAudio = function (TestIdx, fileID, relID) {
         this.TestState.AudiosInLoadQueue += 1;
-        this.audioPool.addAudio(this.TestConfig.Testsets[TestIdx].Files[fileID], relID);
-    };
+        this.audioPool.addAudio(this.TestConfig.AudioRoot +
+                                this.TestConfig.Testsets[TestIdx].Files[fileID],
+                                relID)
+    }
 
     // ###################################################################
     // submit test results to server
     ListeningTest.prototype.SubmitTestResults = function () {
 
-        var UserObj = {};
+        var UserObj = new Object();
         UserObj.UserName = $('#UserName').val();
         UserObj.UserEmail = $('#UserEMail').val();
         UserObj.UserComment = $('#UserComment').val();
 
         var EvalResults = this.TestState.EvalResults;        
-        EvalResults.push(UserObj);
+        EvalResults.push(UserObj)
         
         var testHandle = this;
         $.ajax({
@@ -865,38 +864,38 @@ $.extend({ alert: function (message, title) {
                         $("#ResultsBox").show();
                     }
                 });
-        
         $('#BtnSubmitData').button('option',{ icons: { primary: 'load-indicator' }});
-    };
+
+    }
 
     // ###################################################################
     // submit test results to server
     ListeningTest.prototype.DownloadTestResults = function () {
 
-        var UserObj = {};
+        var UserObj = new Object();
         UserObj.UserName = $('#UserName').val();
         UserObj.UserEmail = $('#UserEMail').val();
         UserObj.UserComment = $('#UserComment').val();
 
         var EvalResults = this.TestState.EvalResults;        
-        EvalResults.push(UserObj);
+        EvalResults.push(UserObj)
 
         saveTextAsFile(JSON.stringify(EvalResults), getDateStamp() + "_" + UserObj.UserName + ".txt");
 
         this.TestState.TestIsRunning = 0;
-    };
+    }
 
     // ###################################################################
     // Check browser capabilities
     ListeningTest.prototype.checkBrowserFeatures = function () {
 
-        var features = {};
+        var features = new Object();
 
-        features.webAPIs = [];
+        features.webAPIs = new Array();
         features.webAPIs['webAudio'] = this.audioPool.waContext!==false;
         features.webAPIs['Blob']     = !!window.Blob;
 
-        features.audioFormats = [];
+        features.audioFormats = new Array();
         var a = document.createElement('audio');
         features.audioFormats['WAV'] = !!(a.canPlayType && a.canPlayType('audio/wav; codecs="1"').replace(/no/, ''));
         features.audioFormats['FLAC'] = !!(a.canPlayType && a.canPlayType('audio/flac').replace(/no/, ''));
@@ -905,7 +904,7 @@ $.extend({ alert: function (message, title) {
         features.audioFormats['AAC'] = !!(a.canPlayType && a.canPlayType('audio/mp4; codecs="mp4a.40.2"').replace(/no/, ''));
 
         this.browserFeatures = features;
-    };
+    }
 
     // ###################################################################
     // Get browser features formatted as a HTML string
@@ -947,7 +946,7 @@ $.extend({ alert: function (message, title) {
             featStr += " <span class='feature-not-available'>AAC</span>";
 
         return featStr;
-    };
+    }
 
 // ###################################################################
 // MUSHRA test main object
@@ -968,14 +967,12 @@ MushraTest.prototype.constructor = MushraTest;
 MushraTest.prototype.createFileMapping = function (TestIdx) {
     var NumFiles = $.map(this.TestConfig.Testsets[TestIdx].Files, function(n, i) { return i; }).length;
     var fileMapping = new Array(NumFiles);    
-    
+
     $.each(this.TestConfig.Testsets[TestIdx].Files, function(index, value) { 
 
-        var RandFileNumber = 0;
         do {
-            RandFileNumber = Math.floor(Math.random()*(NumFiles));
-            if (RandFileNumber > NumFiles-1) 
-                RandFileNumber = NumFiles-1;
+            var RandFileNumber = Math.floor(Math.random()*(NumFiles));
+            if (RandFileNumber>NumFiles-1) RandFileNumber = NumFiles-1;
         } while (typeof fileMapping[RandFileNumber] !== 'undefined');
 
         if (RandFileNumber<0) alert(fileMapping);
@@ -983,7 +980,7 @@ MushraTest.prototype.createFileMapping = function (TestIdx) {
     });
     
     this.TestState.FileMappings[TestIdx] = fileMapping;
-};
+}
 
 // ###################################################################
 // read ratings from TestState object
@@ -999,12 +996,13 @@ MushraTest.prototype.readRatings = function (TestIdx) {
         $(this).slider('value', testObject.TestState.Ratings[TestIdx][fileNum]);
         $(this).slider('refresh');
     });
-};
+
+}
 
 // ###################################################################
 // save ratings to TestState object
 MushraTest.prototype.saveRatings = function (TestIdx) {
-    var ratings = {};
+    var ratings = new Object();
     $(".rateSlider").each( function() {
         var pos = $(this).attr('id').lastIndexOf('slider');
         var fileNum = $(this).attr('id').substring(pos+6, $(this).attr('id').length);
@@ -1023,10 +1021,10 @@ MushraTest.prototype.saveRatings = function (TestIdx) {
         this.TestState.Ratings[TestIdx] = ratings;
         return true;
     } else {
-        $.alert("At least one of your ratings has to be " + this.TestConfig.RateMaxValue + " for valid results!", "Warning!");
+        $.alert("At least one of your ratings has to be " + this.TestConfig.RateMaxValue + " for valid results!", "Warning!")
         return false;
     }
-};
+}
 
 
 MushraTest.prototype.createTestDOM = function (TestIdx) {
@@ -1046,8 +1044,8 @@ MushraTest.prototype.createTestDOM = function (TestIdx) {
         tab.setAttribute('id','TestTable');
             
         var fileID = "";
-        var row = [];
-        var cell = [];
+        var row = new Array();
+        var cell = new Array();
             
         // add reference
         fileID = "Reference";
@@ -1073,7 +1071,7 @@ MushraTest.prototype.createTestDOM = function (TestIdx) {
         // add test items
         for (var i = 0; i < this.TestState.FileMappings[TestIdx].length; i++) { 
             
-            fileID = this.TestState.FileMappings[TestIdx][i];
+            var fileID = this.TestState.FileMappings[TestIdx][i];
             var relID  = "";
             if (fileID === "Reference")
                 relID = "HiddenRef";
@@ -1114,7 +1112,8 @@ MushraTest.prototype.createTestDOM = function (TestIdx) {
             $(this).slider('option', 'value', 0);
             $(this).css('background-image', 'url('+mushraConf.RateScaleBgPng+')');
         });
-};
+
+}
 
 MushraTest.prototype.formatResults = function () {
 
@@ -1126,13 +1125,13 @@ MushraTest.prototype.formatResults = function () {
 
     // evaluate single tests
     for (var i = 0; i < this.TestConfig.Testsets.length; i++) {  
-        this.TestState.EvalResults[i]           = {};
+        this.TestState.EvalResults[i]           = new Object();
         this.TestState.EvalResults[i].TestID    = this.TestConfig.Testsets[i].TestID;
 
         if (this.TestState.TestSequence.indexOf(i)>=0) {
             this.TestState.EvalResults[i].Runtime   = this.TestState.Runtime[i];
-            this.TestState.EvalResults[i].rating    = {};
-            this.TestState.EvalResults[i].filename  = {};
+            this.TestState.EvalResults[i].rating    = new Object();
+            this.TestState.EvalResults[i].filename  = new Object();
 
             resultstring += "<p><b>"+this.TestConfig.Testsets[i].Name + "</b> ("+this.TestConfig.Testsets[i].TestID+"), Runtime:" + this.TestState.Runtime[i]/1000 + "sec </p>\n";
 
@@ -1166,7 +1165,7 @@ MushraTest.prototype.formatResults = function () {
     }
    
     return resultstring;
-};
+}
 
 
 // ###################################################################
@@ -1193,8 +1192,8 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
         tab.setAttribute('id','TestTable');
             
         var fileID = "";
-        var row = [];
-        var cell = [];
+        var row = new Array();
+        var cell = new Array();
 
   
         // create random file mapping if not yet done
@@ -1257,7 +1256,7 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
                $("#selectA").prop("checked", true);
             }*/
         }
-};
+}
 
 
 AbxTest.prototype.readRatings = function (TestIdx) {
@@ -1268,7 +1267,7 @@ AbxTest.prototype.readRatings = function (TestIdx) {
         $("#selectB").prop("checked", true);
     }
 
-};
+}
 
 AbxTest.prototype.saveRatings = function (TestIdx) {
 
@@ -1277,7 +1276,7 @@ AbxTest.prototype.saveRatings = function (TestIdx) {
     } else if ($("#selectB").prop("checked")) {
         this.TestState.Ratings[TestIdx] = "B";
     }
-};
+}
 
 AbxTest.prototype.formatResults = function () {
 
@@ -1291,7 +1290,7 @@ AbxTest.prototype.formatResults = function () {
 
     // evaluate single tests
     for (var i = 0; i < this.TestConfig.Testsets.length; i++) {
-        this.TestState.EvalResults[i]        = {};
+        this.TestState.EvalResults[i]        = new Object();
         this.TestState.EvalResults[i].TestID = this.TestConfig.Testsets[i].TestID;
 
         if (this.TestState.TestSequence.indexOf(i)>=0) {
@@ -1318,4 +1317,148 @@ AbxTest.prototype.formatResults = function () {
 
     resultstring += "<br/><p>Percentage of correct assignments: " + (numCorrect/this.TestConfig.Testsets.length*100).toFixed(2) + " %</p>";
     return resultstring;
-};
+}
+
+
+
+// ###################################################################
+// Preference test main object (modelled after ABX-Test)
+
+// inherit from ListeningTest
+function PrefTest(TestData) {
+    ListeningTest.apply(this, arguments);
+}
+PrefTest.prototype = new ListeningTest();
+PrefTest.prototype.constructor = PrefTest;
+
+
+// implement specific code
+PrefTest.prototype.createTestDOM = function (TestIdx) {
+
+        // clear old test table
+        if ($('#TableContainer > table')) {
+            $('#TableContainer > table').remove();
+        }
+
+        // create new test table
+        var tab = document.createElement('table');
+        tab.setAttribute('id','TestTable');
+            
+        var fileID = "";
+        var row = new Array();
+        var cell = new Array();
+
+  
+        // create random file mapping if not yet done
+        if (!this.TestState.FileMappings[TestIdx]) {
+           this.TestState.FileMappings[TestIdx] = {"A": "", "B": ""};
+           var RandFileNumber = Math.random();
+           if (this.TestConfig.RandomizeFileOrder && RandFileNumber>0.5) {
+               this.TestState.FileMappings[TestIdx].A = "B";
+               this.TestState.FileMappings[TestIdx].B = "A";
+           } else {
+               this.TestState.FileMappings[TestIdx].A = "A";
+               this.TestState.FileMappings[TestIdx].B = "B";
+            }                
+        }	
+            
+        // add reference
+        fileID = this.TestState.FileMappings[TestIdx].A;
+        row  = tab.insertRow(-1);
+        cell[0] = row.insertCell(-1);
+        cell[0].innerHTML = '<button id="play'+fileID+'Btn" class="playButton" rel="'+fileID+'">A</button>';
+        this.addAudio(TestIdx, fileID, fileID);
+
+        fileID = this.TestState.FileMappings[TestIdx].B;
+        cell[1] = row.insertCell(-1);
+        cell[1].innerHTML = '<button id="play'+fileID+'Btn" class="playButton" rel="'+fileID+'">B</button>';
+        this.addAudio(TestIdx, fileID, fileID);
+
+        cell[2] = row.insertCell(-1);
+        cell[2].innerHTML = "<button class='stopButton'>Stop</button>";
+        
+        cell[3] = row.insertCell(-1);
+        cell[3].innerHTML = "Press buttons to start/stop playback."; 
+ 
+        row[1]  = tab.insertRow(-1);
+        cell[0] = row[1].insertCell(-1);
+        cell[0].innerHTML = "<input type='radio' name='ItemSelection' id='selectA'/>";
+        cell[1] = row[1].insertCell(-1);
+        cell[1].innerHTML = "<input type='radio' name='ItemSelection' id='selectB'/>";  
+        cell[2] = row[1].insertCell(-1);
+        cell[3] = row[1].insertCell(-1);
+        cell[3].innerHTML = "Please select the item which you prefer!";
+       
+        // add spacing
+        row = tab.insertRow(-1);
+        row.setAttribute("height","5");  
+
+        // append the created table to the DOM
+        $('#TableContainer').append(tab);	
+
+        // randomly preselect one radio button
+        if (typeof this.TestState.Ratings[TestIdx] == 'undefined') {
+            /*if (Math.random() > 0.5) {
+               $("#selectB").prop("checked", true);
+            } else {
+               $("#selectA").prop("checked", true);
+            }*/
+        }
+}
+
+
+PrefTest.prototype.readRatings = function (TestIdx) {
+
+    if (this.TestState.Ratings[TestIdx] === "A") {
+        $("#selectA").prop("checked", true);
+    } else if (this.TestState.Ratings[TestIdx] === "B") {
+        $("#selectB").prop("checked", true);
+    }
+
+}
+
+PrefTest.prototype.saveRatings = function (TestIdx) {
+
+    if ($("#selectA").prop("checked")) {
+        this.TestState.Ratings[TestIdx] = "A";
+    } else if ($("#selectB").prop("checked")) {
+        this.TestState.Ratings[TestIdx] = "B";
+    }
+}
+
+PrefTest.prototype.formatResults = function () {
+
+    var resultstring = "";
+    var tab = document.createElement('table');
+    var head = tab.createTHead();
+    var row = head.insertRow(-1);
+    var cell = row.insertCell(-1); cell.innerHTML = "Test Name and ID";
+    cell = row.insertCell(-1);     cell.innerHTML = "presented order";
+    cell = row.insertCell(-1);     cell.innerHTML = "time in ms";
+    cell = row.insertCell(-1);     cell.innerHTML = "chosen preference";
+
+    var numCorrect = 0;
+    var numWrong   = 0;
+
+    // evaluate single tests
+    for (var i = 0; i < this.TestConfig.Testsets.length; i++) {
+        this.TestState.EvalResults[i] = new Object();
+        this.TestState.EvalResults[i].TestID = this.TestConfig.Testsets[i].TestID;
+        if (this.TestState.TestSequence.indexOf(i)>=0) {
+            row  = tab.insertRow(-1);
+            cell = row.insertCell(-1);
+            cell.innerHTML = this.TestConfig.Testsets[i].Name + "("+this.TestConfig.Testsets[i].TestID+")";
+            cell = row.insertCell(-1);
+            this.TestState.EvalResults[i].PresentationOrder = "A=" + this.TestState.FileMappings[i].A + ", B=" + this.TestState.FileMappings[i].B;
+            cell.innerHTML = this.TestState.EvalResults[i].PresentationOrder;
+            cell = row.insertCell(-1);
+            this.TestState.EvalResults[i].Runtime   = this.TestState.Runtime[i];
+            cell.innerHTML = this.TestState.EvalResults[i].Runtime; 
+            cell = row.insertCell(-1);
+            this.TestState.EvalResults[i].Preference = this.TestState.Ratings[i];
+            cell.innerHTML = this.TestState.EvalResults[i].Preference;
+        }
+    }
+    resultstring += tab.outerHTML;
+    return resultstring;
+}
