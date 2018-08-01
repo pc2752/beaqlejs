@@ -1202,28 +1202,51 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
 
   
         // create random file mapping if not yet done
-        if (!this.TestState.FileMappings[TestIdx]) {
-           this.TestState.FileMappings[TestIdx] = {"X": ""};
-           var RandFileNumber = Math.random();
-           if (RandFileNumber>0.5) {
-               this.TestState.FileMappings[TestIdx].X = "A";
-            } else {
-               this.TestState.FileMappings[TestIdx].X = "B";
-            }                
-        }	
+        // if (!this.TestState.FileMappings[TestIdx]) {
+        //    this.TestState.FileMappings[TestIdx] = {"X": ""};
+        //    var RandFileNumber = Math.random();
+        //    if (RandFileNumber>0.5) {
+        //        this.TestState.FileMappings[TestIdx].X = "A";
+        //     } else {
+        //        this.TestState.FileMappings[TestIdx].X = "B";
+        //     }                
+        // }	
             
         // add reference
+        if ((this.TestConfig.Testsets[TestIdx].Name == "Intelligibility 1")) {
+            $.alert("You are now starting the intelligibility tests, please select the clip out of A and B, which is more clearly understandable")
+            // return true;
+        } else if ((this.TestConfig.Testsets[TestIdx].Name == "Separation 1")) {
+            $.alert("You are now starting the source separation tests, please select the clip out of A and B, which has less elements from the backing track. You can listen to the Mixture signal to get an idea of the backing track.")
+
+        } else if ((this.TestConfig.Testsets[TestIdx].Name == "Audio Quality 1")) {
+            $.alert("You are now starting the audio quality tests, please select the clip out of A and B, which sounds most natural, you can use the reference track to get an idea of the naturallness of the sound.")
+
+        } else{
+            // cell[4].innerHTML = "&larr; Please select preferred clip in terms of audio quality, in comparision to the refernce,<br/>or select <i>no pref.</i> for no clear preference.";  
+
+        }      
+
+
         fileID = "A";
         row  = tab.insertRow(-1);
         cell[0] = row.insertCell(-1);
         cell[0].innerHTML = '<button id="play'+fileID+'Btn" class="playButton" rel="'+fileID+'">A</button>';
         this.addAudio(TestIdx, fileID, fileID);
 
-        fileID = this.TestState.FileMappings[TestIdx].X;
-        var relID  = "X";
-        cell[1] = row.insertCell(-1);
-        cell[1].innerHTML =  '<button id="play'+relID+'Btn" class="playButton" rel="'+relID+'">X</button>';
-        this.addAudio(TestIdx, fileID, relID);
+        fileID = "X";
+        if ((this.TestConfig.Testsets[TestIdx].Files[fileID] == 0)) {
+            cell[1] = row.insertCell(-1);
+            // $.alert("booboo")
+            // return true;
+        } else {
+            var relID  = "X";
+            cell[1] = row.insertCell(-1);
+            cell[1].innerHTML =  '<button id="play'+relID+'Btn" class="playButton" rel="'+fileID+'">Reference</button>';
+            this.addAudio(TestIdx, fileID, relID);
+            // return false;
+        }
+
 
         fileID = "B";
         cell[2] = row.insertCell(-1);
@@ -1235,16 +1258,60 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
         
         cell[4] = row.insertCell(-1);
         cell[4].innerHTML = "Press buttons to start/stop playback."; 
- 
+
+
+        fileID = "Y";
+
+        // $.alert("At least one of your ratings has to be " + this.TestConfig.Testsets[TestIdx].Name + " for valid results!", "Warning!")
+
+        if ((this.TestConfig.Testsets[TestIdx].Files[fileID] == 0)) {
+            // $.alert("booboo")
+            // return true;
+        } else {
+            var relID  = "Y";
+            row  = tab.insertRow(-1);
+            cell[5] = row.insertCell(-1);
+            cell[5] = row.insertCell(-1);
+            cell[5].innerHTML =  '<button id="play'+relID+'Btn" class="playButton" rel="'+fileID+'">Mixture</button>';
+            this.addAudio(TestIdx, fileID, relID);
+            // return false;
+        }
+
+        // $.alert("At least one of your ratings has to be " + this.TestConfig.Testsets[TestIdx].Files[fileID] + " for valid results!", "Warning!") 
         row[1]  = tab.insertRow(-1);
         cell[0] = row[1].insertCell(-1);
         cell[0].innerHTML = "<input type='radio' name='ItemSelection' id='selectA'/>";
         cell[1] = row[1].insertCell(-1);
+        cell[1].innerHTML = "<input type='radio' name='ItemSelection' id='selectNoPref'/>";
         cell[2] = row[1].insertCell(-1);
         cell[2].innerHTML = "<input type='radio' name='ItemSelection' id='selectB'/>";  
         cell[3] = row[1].insertCell(-1);
         cell[4] = row[1].insertCell(-1);
-        cell[4].innerHTML = "Please select the item which is closest to X!";  
+
+        var TestName = this.TestConfig.Testsets[TestIdx].Name.substring(0, 2)
+
+        // $.alert(booboo)
+
+        if ((TestName == "In")) {
+            cell[4].innerHTML = "&larr; Please select clip which is easier to understand from A and B <br/>or select <i>no pref.</i> for no clear preference.";  
+            // return true;
+        } else if ((TestName == "Se")) {
+            cell[4].innerHTML = "&larr; Please select preferred clip in terms of source separation, in comparision to the reference. The preferred clip in this case should not have elements from the mixture.<br/>or select <i>no pref.</i> for no clear preference.";  
+
+        } else{
+            cell[4].innerHTML = "&larr; Please select preferred clip in terms of audio quality, in comparision to the reference,<br/>or select <i>no pref.</i> for no clear preference.";  
+
+        }        
+       
+        row[2]  = tab.insertRow(-1);
+        cell[0] = row[2].insertCell(-1);
+        cell[0].innerHTML = "A";
+        cell[1] = row[2].insertCell(-1);
+        cell[1].innerHTML = "no pref.";
+        cell[2] = row[2].insertCell(-1);
+        cell[2].innerHTML = "B";
+        cell[3] = row[2].insertCell(-1);
+        cell[4] = row[2].insertCell(-1);
        
         // add spacing
         row = tab.insertRow(-1);
@@ -1270,8 +1337,9 @@ AbxTest.prototype.readRatings = function (TestIdx) {
         $("#selectA").prop("checked", true);
     } else if (this.TestState.Ratings[TestIdx] === "B") {
         $("#selectB").prop("checked", true);
+    } else if (this.TestState.Ratings[TestIdx] === "NoPref") {
+        $("#selectNoPref").prop("checked", true);
     }
-
 }
 
 AbxTest.prototype.saveRatings = function (TestIdx) {
@@ -1280,48 +1348,47 @@ AbxTest.prototype.saveRatings = function (TestIdx) {
         this.TestState.Ratings[TestIdx] = "A";
     } else if ($("#selectB").prop("checked")) {
         this.TestState.Ratings[TestIdx] = "B";
+    } else if ($("#selectNoPref").prop("checked")) {
+        this.TestState.Ratings[TestIdx] = "NoPref";
+    } else {
+        this.TestState.Ratings[TestIdx] = "undefined";
     }
 }
 
 AbxTest.prototype.formatResults = function () {
 
     var resultstring = "";
-    var tab = document.createElement('table');
-    var row;
-    var cell;
-
-    var numCorrect = 0;
-    var numWrong   = 0;
 
     // evaluate single tests
-    for (var i = 0; i < this.TestConfig.Testsets.length; i++) {
-        this.TestState.EvalResults[i]        = new Object();
-        this.TestState.EvalResults[i].TestID = this.TestConfig.Testsets[i].TestID;
+    for (var i = 0; i < this.TestConfig.Testsets.length; i++) {  
+        this.TestState.EvalResults[i]           = new Object();
+        this.TestState.EvalResults[i].TestID    = this.TestConfig.Testsets[i].TestID;
 
-        if (this.TestState.TestSequence.indexOf(i)>=0) {
-            row  = tab.insertRow(-1);
-
-            cell = row.insertCell(-1);
-            cell.innerHTML = this.TestConfig.Testsets[i].Name + "("+this.TestConfig.Testsets[i].TestID+")";
-            cell = row.insertCell(-1);
-
-
-            if (this.TestState.Ratings[i] === this.TestState.FileMappings[i].X) {
-                this.TestState.EvalResults[i] = true;
-                cell.innerHTML = "correct"; 
-                numCorrect += 1;
+        if (this.TestState.TestSequence.indexOf(i) >= 0) {
+            this.TestState.EvalResults[i].Runtime    = this.TestState.Runtime[i];
+            if (this.TestState.Ratings[i] === "undefined") {
+                this.TestState.EvalResults[i].completed  = false;
             } else {
-                this.TestState.EvalResults[i] = false;
-                cell.innerHTML = "wrong"; 
-                numWrong += 1;
+                this.TestState.EvalResults[i].completed  = true;
+                this.TestState.EvalResults[i].preference = this.TestState.Ratings[i];
+                if (this.TestState.Ratings[i] === "NoPref") {
+                    this.TestState.EvalResults[i].fileID = "3";
+                } else {
+                    this.TestState.EvalResults[i].fileID = this.TestState.FileMappings[i][this.TestState.Ratings[i]];
+                }
+                
+                // display results (optionally)
+                resultstring += "<p>";
+                resultstring += "<b>" + this.TestConfig.Testsets[i].Name + "</b>";
+                resultstring += " (" + this.TestConfig.Testsets[i].TestID + ")";
+                resultstring += ", Runtime: " + this.TestState.Runtime[i]/1000 + "sec";
+                resultstring += ", Preference: " + this.TestState.Ratings[i] + " (file: " + this.TestState.FileMappings[i][this.TestState.Ratings[i]] + ")";
+                resultstring += "</p>\n";
             }
         }
     }
-
-    resultstring += tab.outerHTML;
-
-    resultstring += "<br/><p>Percentage of correct assignments: " + (numCorrect/this.TestConfig.Testsets.length*100).toFixed(2) + " %</p>";
-    return resultstring;
+   
+    return resultstring;    
 }
 
 
