@@ -1214,13 +1214,13 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
             
         // add reference
         if ((this.TestConfig.Testsets[TestIdx].Name == "Intelligibility 1")) {
-            $.alert("You are now starting the intelligibility tests, please select the clip out of A and B, which is more clearly understandable")
+            $.alert("现在将要开始可懂度实验。请在A, B两个素材中选择最易懂的那一个。")
             // return true;
         } else if ((this.TestConfig.Testsets[TestIdx].Name == "Separation 1")) {
-            $.alert("You are now starting the source separation tests, please select the clip out of A and B, which has less elements from the backing track. You can listen to the Mixture signal to get an idea of the backing track.")
+            $.alert("现在将要开始声源分离的实验。请在A，B两个素材中选择包含背景音乐最少的那一个。你可以听“Mixture”素材来体会背景音乐。")
 
         } else if ((this.TestConfig.Testsets[TestIdx].Name == "Audio Quality 1")) {
-            $.alert("You are now starting the audio quality tests, please select the clip out of A and B, which sounds most natural, you can use the reference track to get an idea of the naturallness of the sound.")
+            $.alert("现在将要开始音质的实验。请在A, B两个素材中选择音质最自然的那个。你可以听“Reference”素材来提会最自然的音质。")
 
         } else{
             // cell[4].innerHTML = "&larr; Please select preferred clip in terms of audio quality, in comparision to the refernce,<br/>or select <i>no pref.</i> for no clear preference.";  
@@ -1293,13 +1293,13 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
         // $.alert(booboo)
 
         if ((TestName == "In")) {
-            cell[4].innerHTML = "&larr; Please select clip which is easier to understand from A and B <br/>or select <i>no pref.</i> for no clear preference.";  
+            cell[4].innerHTML = "&larr; 请在A, B两个素材中选择最易懂的那一个，或者选择 no pref. 如果没有偏好。";  
             // return true;
         } else if ((TestName == "Se")) {
-            cell[4].innerHTML = "&larr; Please select preferred clip in terms of source separation, in comparision to the reference. The preferred clip in this case should not have elements from the mixture.<br/>or select <i>no pref.</i> for no clear preference.";  
+            cell[4].innerHTML = "&larr; 请在A，B两个素材中选择包含背景音乐最少的那一个。你可以听“Mixture”素材来体会背景音乐。";  
 
         } else{
-            cell[4].innerHTML = "&larr; Please select preferred clip in terms of audio quality, in comparision to the reference,<br/>or select <i>no pref.</i> for no clear preference.";  
+            cell[4].innerHTML = "&larr; 请在A, B两个素材中选择音质最自然的那个。你可以听“Reference”素材来提会最自然的音质。";  
 
         }        
        
