@@ -1,6 +1,6 @@
 // configure the test here
 var TestConfig = {
-  "TestName": "Source Separation Evaluation - English Test",
+  "TestName": "Source Separation Evaluation",
   "LoopByDefault": true,
   "ShowFileIDs": false,
   "ShowResults": false,
