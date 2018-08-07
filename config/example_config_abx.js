@@ -5,14 +5,14 @@ var TestConfig = {
   "ShowFileIDs": false,
   "ShowResults": false,
   "EnableABLoop": true,
-  "EnableOnlineSubmission": false,
-  "BeaqleServiceURL": "",
-  "SupervisorContact": "", 
+  "EnableOnlineSubmission": true,
+  "BeaqleServiceURL": "/sourcesepeval/web_service/beaqleJS_Service.php",
+  "SupervisorContact": "",
   "RandomizeTestOrder": false,
   "MaxTestsPerRun": 45,
   "AudioRoot": "",
   "Testsets": [
-    //    
+    //
     {
       "Name": "Intelligibility 1",
       "TestID": "id1",
@@ -162,7 +162,7 @@ var TestConfig = {
         "X": " ",
         "Y": " ",
       }
-    },    //    
+    },    //
     {
       "Name": "Separation 1",
       "TestID": "id1",
@@ -312,7 +312,7 @@ var TestConfig = {
         "X": "audio/31101_verse_1_ori.mp3",
         "Y": "audio/31101_verse_1_mix.mp3",
       }
-    },  
+    },
 
     {
       "Name": "Audio Quality 1",
@@ -463,6 +463,6 @@ var TestConfig = {
         "X": "audio/31101_verse_1_ori.mp3",
         "Y": " ",
       }
-    },      
+    },
   ]
 }
