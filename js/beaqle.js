@@ -1201,16 +1201,17 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
         var cell = new Array();
 
   
-        // create random file mapping if not yet done
-        // if (!this.TestState.FileMappings[TestIdx]) {
-        //    this.TestState.FileMappings[TestIdx] = {"X": ""};
-        //    var RandFileNumber = Math.random();
-        //    if (RandFileNumber>0.5) {
-        //        this.TestState.FileMappings[TestIdx].X = "A";
-        //     } else {
-        //        this.TestState.FileMappings[TestIdx].X = "B";
-        //     }                
-        // }	
+        if (!this.TestState.FileMappings[TestIdx]) {
+           this.TestState.FileMappings[TestIdx] = {"A": "", "B": ""};
+           var RandFileNumber = Math.random();
+           if (RandFileNumber>0.5) {
+               this.TestState.FileMappings[TestIdx].A = "1";
+               this.TestState.FileMappings[TestIdx].B = "2";
+            } else {
+               this.TestState.FileMappings[TestIdx].A = "2";
+               this.TestState.FileMappings[TestIdx].B = "1";
+            }                
+        }
             
         // add reference
         if ((this.TestConfig.Testsets[TestIdx].Name == "Intelligibility 1")) {
@@ -1318,6 +1319,8 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
         row.setAttribute("height","5");  
 
         // append the created table to the DOM
+
+
         $('#TableContainer').append(tab);	
 
         // randomly preselect one radio button
@@ -1332,6 +1335,8 @@ AbxTest.prototype.createTestDOM = function (TestIdx) {
 
 
 AbxTest.prototype.readRatings = function (TestIdx) {
+    console.log(this.TestState.Ratings[TestIdx])
+
 
     if (this.TestState.Ratings[TestIdx] === "A") {
         $("#selectA").prop("checked", true);
@@ -1358,6 +1363,8 @@ AbxTest.prototype.saveRatings = function (TestIdx) {
 AbxTest.prototype.formatResults = function () {
 
     var resultstring = "";
+    console.log(this.TestState.Ratings)
+    console.log(this.TestState.FileMappings[0]["A"])
 
     // evaluate single tests
     for (var i = 0; i < this.TestConfig.Testsets.length; i++) {  

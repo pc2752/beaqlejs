@@ -14,7 +14,7 @@ var TestConfig = {
   "BeaqleServiceURL": "",
   "SupervisorContact": "",
   "RandomizeTestOrder": true,
-  "MaxTestsPerRun": 18,
+  "MaxTestsPerRun": 2,
   "RequireMaxRating": false,
   "AudioRoot": "",
   "Testsets": [
