@@ -822,6 +822,10 @@ $.extend({ alert: function (message, title) {
         UserObj.UserName = $('#UserName').val();
         UserObj.UserEmail = $('#UserEMail').val();
         UserObj.UserComment = $('#UserComment').val();
+        UserObj.Age = $('#Age').val();
+        UserObj.Gender = $('#Gender').val();
+        UserObj.Musical_Training = $('#Musical_Training').val();
+        UserObj.Language = $('#Language').val();
 
         var EvalResults = this.TestState.EvalResults;        
         EvalResults.push(UserObj)
